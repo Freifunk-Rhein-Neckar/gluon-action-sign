@@ -3,6 +3,9 @@
 name: "Sign Gluon Manifest"
 description: "Sign Gluon Manifest using the build-gluon container"
 inputs:
+  container-image:
+    description: 'URL to the Container registry Image to use'
+    default: 'ghcr.io/freifunk-gluon/gluon-build'
   container-version:
     description: 'Container version to use'
     default: 'main'
@@ -27,10 +30,27 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - run: docker build --build-arg CONTAINER --build-arg VERSION -t sdk $GITHUB_ACTION_PATH
+    - run: |
+        docker build \
+          --build-arg CONTAINER \
+          --build-arg VERSION \
+          -t sdk \
+          $GITHUB_ACTION_PATH
       env:
         VERSION: ${{ inputs.container-version }}
       shell: bash
+      if: needs.build-meta.outputs.container-image == ''
+    - run: |
+        docker build \
+          --build-arg CONTAINER \
+          --build-arg VERSION \
+          -t sdk \
+          $GITHUB_ACTION_PATH
+      env:
+        CONTAINER: ${{ inputs.container-image }}
+        VERSION: ${{ inputs.container-version }}
+      shell: bash
+      if: needs.build-meta.outputs.container-image != ''
     - run: mkdir -p ${RUNNER_TEMP}/workdir
       shell: bash
     - run: echo "${{ inputs.signing-key }}" > "${RUNNER_TEMP}/workdir/signing.key"
