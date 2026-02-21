@@ -19,5 +19,5 @@ jobs:
             .
         env:
           # Utilize matrix with release-versions once available
-          VERSION: master
+          VERSION: main
         shell: bash
